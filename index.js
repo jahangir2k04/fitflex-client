@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -31,6 +32,12 @@ async function run() {
         const usersCollection = client.db('fitflexDB').collection('users');
 
 
+        // jwt related apis
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token });
+        })
 
         // users related apis
         app.get('/users', async (req, res) => {
