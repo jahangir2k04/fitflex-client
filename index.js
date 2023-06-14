@@ -10,6 +10,9 @@ app.use(express.json());
 
 
 
+
+
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wx1xaqv.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -27,8 +30,21 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const usersCollection = client.db('fitflexDB').collection('users');
 
 
+         
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: "user already exist" })
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
