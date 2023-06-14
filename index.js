@@ -45,6 +45,7 @@ async function run() {
         await client.connect();
 
         const usersCollection = client.db('fitflexDB').collection('users');
+        const classCollection = client.db('fitflexDB').collection('classes');
 
 
         // jwt related apis
@@ -59,6 +60,16 @@ async function run() {
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             if (user?.role !== 'admin') {
+                return res.status(403).send({ error: true, message: "forbidden access" })
+            }
+            next();
+        }
+
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'instructor') {
                 return res.status(403).send({ error: true, message: "forbidden access" })
             }
             next();
@@ -82,28 +93,6 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
-            const email = req.params.email;
-            if (req.decoded.email !== email) {
-                res.send({ admin: false })
-            }
-            const query = { email: email };
-            const user = await usersCollection.findOne(query);
-            const result = { admin: user?.role === 'admin' };
-            res.send(result);
-        })
-
-        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
-            const email = req.params.email;
-            if (req.decoded.email !== email) {
-                res.send({ instructor: false })
-            }
-            const query = { email: email };
-            const user = await usersCollection.findOne(query);
-            const result = { instructor: user?.role === 'instructor' };
-            res.send(result);
-        })
-
         app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
             const role = req.body.role;
@@ -116,6 +105,41 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedRole);
             res.send(result);
         });
+
+        // admin related apis
+        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
+                res.send({ admin: false })
+            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const result = { admin: user?.role === 'admin' };
+            res.send(result);
+        })
+
+
+        // Instructor related apis
+        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (req.decoded.email !== email) {
+                res.send({ instructor: false })
+            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const result = { instructor: user?.role === 'instructor' };
+            res.send(result);
+        })
+
+        app.post('/classes', async(req, res) => {
+            const newClass = req.body;
+            const result = await classCollection.insertOne(newClass);
+            res.send(result);
+        })
+
+
+        // student related apis
+
 
 
         // Send a ping to confirm a successful connection
