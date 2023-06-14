@@ -131,11 +131,45 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/classes', async(req, res) => {
+        // class related apis
+        app.get('/classes', async(req, res) => {
+            const result = await classCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
             const newClass = req.body;
             const result = await classCollection.insertOne(newClass);
             res.send(result);
         })
+
+        app.patch('/classes/status/:id', async(req, res) => {
+            const id = req.params.id;
+            const status = req.body.status;
+            const filter = {_id: new ObjectId(id)};
+            const updatedStatus = {
+                $set: {
+                    status: status
+                },
+            };
+            const result = await classCollection.updateOne(filter, updatedStatus);
+            res.send(result);
+        })
+
+        app.patch('/classes/feedback/:id', async(req, res) => {
+            const id = req.params.id;
+            const feedback = req.body.feedbackText;
+            const filter = {_id: new ObjectId(id)};
+            const updatedStatus = {
+                $set: {
+                    feedback: feedback
+                },
+            };
+            const result = await classCollection.updateOne(filter, updatedStatus);
+            res.send(result);
+        })
+
+        
 
 
         // student related apis
