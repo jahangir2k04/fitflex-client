@@ -46,6 +46,7 @@ async function run() {
 
         const usersCollection = client.db('fitflexDB').collection('users');
         const classCollection = client.db('fitflexDB').collection('classes');
+        const selectedClassCollection = client.db('fitflexDB').collection('selectedClasses');
 
 
         // jwt related apis
@@ -180,10 +181,12 @@ async function run() {
         })
 
         
-
-
         // student related apis
-        
+        app.post('/selected-class', verifyJWT, async(req, res) => {
+            const selectedClass = req.body;
+            const result = await selectedClassCollection.insertOne(selectedClass);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
