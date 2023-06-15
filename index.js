@@ -76,6 +76,16 @@ async function run() {
             next();
         }
 
+        const verifyStudent = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'student') {
+                return res.status(403).send({ error: true, message: "forbidden access" })
+            }
+            next();
+        }
+
 
         // users related apis
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
@@ -154,7 +164,7 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/classes/status/:id', async(req, res) => {
+        app.patch('/classes/status/:id', verifyJWT, verifyAdmin, async(req, res) => {
             const id = req.params.id;
             const status = req.body.status;
             const filter = {_id: new ObjectId(id)};
@@ -167,7 +177,7 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/classes/feedback/:id', async(req, res) => {
+        app.patch('/classes/feedback/:id', verifyJWT, verifyAdmin, async(req, res) => {
             const id = req.params.id;
             const feedback = req.body.feedbackText;
             const filter = {_id: new ObjectId(id)};
@@ -182,9 +192,26 @@ async function run() {
 
         
         // student related apis
-        app.post('/selected-class', verifyJWT, async(req, res) => {
+        app.get('/selected-class', verifyJWT, verifyStudent, async(req,res) => {
+            const email = req.query.email;
+            if(!email){
+                res.send([]);
+            }
+            const query = {email: email};
+            const result = await selectedClassCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/selected-class', verifyJWT, verifyStudent, async(req, res) => {
             const selectedClass = req.body;
             const result = await selectedClassCollection.insertOne(selectedClass);
+            res.send(result);
+        })
+
+        app.delete('/delete-class/:id', verifyJWT, verifyStudent, async(req,res) => {
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await selectedClassCollection.deleteOne(query);
             res.send(result);
         })
 
