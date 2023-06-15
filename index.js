@@ -131,6 +131,16 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/my-class', verifyJWT, verifyInstructor, async(req, res) => {
+            const email = req.query.email;
+            if(!email){
+                res.send([]);
+            }
+            const query = {email: email};
+            const result = await classCollection.find(query).toArray();
+            res.send(result);
+        })
+
         // class related apis
         app.get('/classes', async(req, res) => {
             const result = await classCollection.find().toArray();
@@ -173,7 +183,7 @@ async function run() {
 
 
         // student related apis
-
+        
 
 
         // Send a ping to confirm a successful connection
