@@ -211,6 +211,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/enrolled-class', verifyJWT, verifyStudent, async(req, res) => {
+            const email = req.query.email;
+            const query = {email : email};
+            const result = await paymentCollection.find(query).sort({"date": -1}).toArray();
+            res.send(result);
+        })
+
         app.post('/selected-class', verifyJWT, verifyStudent, async (req, res) => {
             const selectedClass = req.body;
             const result = await selectedClassCollection.insertOne(selectedClass);
@@ -223,6 +230,7 @@ async function run() {
             const result = await selectedClassCollection.deleteOne(query);
             res.send(result);
         })
+
 
         // PAYMENT related apis
         app.post('/create-payment-intent', verifyJWT, verifyStudent, async (req, res) => {
@@ -240,13 +248,29 @@ async function run() {
 
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
-            const deleteId = payment.classId;
+            const id = payment.classId;
             const insertResult = await paymentCollection.insertOne(payment);
 
-            const query = { classId: deleteId };
+            const query = { classId: id };
             const deleteResult = await selectedClassCollection.deleteOne(query);
 
-            res.send({ insertResult, deleteResult });
+            const filter = {_id: new ObjectId(id)};
+            const updatedSeats = {
+                $set: {
+                    seats: payment.seats - 1,
+                    enrolled: payment.enrolled + 1,
+                },
+            };
+            const updateResult = await classCollection.updateOne(filter, updatedSeats); 
+
+            const filterEmail = {email: payment.instructorEmail};
+            const updateStudent = {
+                $inc: { totalStudent: 1 }
+            }
+            const options = { upsert: true};
+            const studentResult = await usersCollection.updateOne(filterEmail, updateStudent, options);
+
+            res.send({ insertResult, deleteResult, updateResult, studentResult });
         })
 
 
