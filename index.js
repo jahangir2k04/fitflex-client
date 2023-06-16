@@ -160,10 +160,21 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/popular-instructor', async(req, res) => {
+            const query = {role: 'instructor'}
+            const result = await usersCollection.find(query).sort({"totalStudent": -1}).limit(6).toArray();
+            res.send(result);
+        })
+
 
         // class related apis
-        app.get('/classes', async (req, res) => {
+        app.get('/all-classes', async (req, res) => {
             const result = await classCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/popular-classes', async(req, res) => {
+            const result = await classCollection.find().sort({"enrolled": -1}).limit(6).toArray();
             res.send(result);
         })
 
@@ -201,7 +212,7 @@ async function run() {
 
 
         // student related apis
-        app.get('/selected-class', verifyJWT, verifyStudent, async (req, res) => {
+        app.get('/selected-class', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
