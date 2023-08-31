@@ -1,5 +1,6 @@
 # Fitflex Server Side
-* **Client side:** https://github.com/jahangir2k04/fitflex-client-side
+## Client side:
+https://github.com/jahangir2k04/fitflex-client-side
 ## Used packages/technology
 * Express
 * MongoDB
